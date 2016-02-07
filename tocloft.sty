@@ -315,7 +315,7 @@ Consider installing the current version of tocbibind.}}
      \let\@cftasnum \cftsecaftersnum
      \let\@cftasnumb \cftsecaftersnumb
      \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
-     {\cftsecfont #1}\nobreak
+     {\cftsecfont \let\selectfont=\relax #1}\nobreak
      \cftsecfillnum{#2}}%
   \fi}
 \newlength{\cftbeforesecskip}
