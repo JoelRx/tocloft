@@ -23,7 +23,14 @@
 %%   This work consists of the files listed in the README file.
 %% 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{tocloft}[2013/05/02 v2.3f parameterised ToC, etc., typesetting]
+\ProvidesPackage{my-tocloft}[2017/08/31 v2.3i parameterised ToC, etc., typesetting]
+\newcommand\@cftifundefined[1]{%
+  \begingroup\expandafter\expandafter\expandafter\endgroup
+  \expandafter\ifx\csname #1\endcsname\relax
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi}
 \newcommand{\@cftquit}{}
 \newif\if@cfthaschapter
 \newif\if@cftkoma
@@ -33,9 +40,9 @@
 \@ifclassloaded{scrbook}{\@cftkomatrue}{}
 \newif\if@cfttitlesec
 \AtBeginDocument{\@ifpackageloaded{titlesec}{\@cfttitlesectrue}{}}
-\@ifundefined{chapter}{%
+\@cftifundefined{chapter}{%
   \@cfthaschapterfalse
-  \@ifundefined{section}{%
+  \@cftifundefined{section}{%
     \PackageWarning{tocloft}%
       {I don't recognize any sectional divisions so I'll do nothing}
     \renewcommand{\@cftquit}{\endinput}
@@ -179,7 +186,7 @@ Consider installing the current version of tocbibind.}}
 \newcommand{\@cftasnumb}{}
 \newif\if@cftdopart
 \newif\if@cfthaspart
-\@ifundefined{part}{\@cfthaspartfalse}{\@cfthasparttrue}
+\@cftifundefined{part}{\@cfthaspartfalse}{\@cfthasparttrue}
 \if@cfthaspart
 \renewcommand*{\l@part}[2]{%
   \@cftdopartfalse
@@ -212,7 +219,7 @@ Consider installing the current version of tocbibind.}}
        \let\@cftasnum \cftpartaftersnum
        \let\@cftasnumb \cftpartaftersnumb
        \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
-       {\cftpartfont \if@cftkoma\else\if@cfttitlesec\else\cftpartpresnum\fi\fi #1}%
+       {\begin{minipage}{0.9\textwidth}\cftpartfont \if@cftkoma\else\if@cfttitlesec\else\cftpartpresnum\fi\fi \protect\centering#1\end{minipage}}%
        \cftpartfillnum{#2}}
       \nobreak
       \if@cfthaschapter
@@ -315,7 +322,7 @@ Consider installing the current version of tocbibind.}}
      \let\@cftasnum \cftsecaftersnum
      \let\@cftasnumb \cftsecaftersnumb
      \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
-     {\cftsecfont \let\selectfont=\relax #1}\nobreak
+     {\cftsecfont #1}\nobreak
      \cftsecfillnum{#2}}%
   \fi}
 \newlength{\cftbeforesecskip}
@@ -943,6 +950,8 @@ Consider installing the current version of tocbibind.}}
       \fi
     \fi
     \@namedef{cftafter#3title}{}
+    \@namedef{cft#3prehook}{}
+    \@namedef{cft#3posthook}{}
 }
 \newcommand{\cftsetindents}[3]{%
   \def\@cftemp{#1}
@@ -1105,6 +1114,38 @@ Consider installing the current version of tocbibind.}}
   }{}
 }
 
+\def\@starttoc@latex@orig#1{%
+ \begingroup
+   \makeatletter
+   \@input{\jobname.#1}%
+   \if@filesw
+     \expandafter\newwrite\csname tf@#1\endcsname
+     \immediate\openout \csname tf@#1\endcsname \jobname.#1\relax
+   \fi
+  \@nobreakfalse
+\endgroup}
+\ifx\@starttoc\@starttoc@latex@orig
+  \def\@starttoc#1{%
+    \csname cft#1prehook\endcsname
+    \begingroup
+      \makeatletter
+      \@input{\jobname.#1}%
+      \if@filesw
+        \expandafter\newwrite\csname tf@#1\endcsname
+        \immediate\openout \csname tf@#1\endcsname \jobname.#1\relax
+      \fi
+      \@nobreakfalse
+    \endgroup
+    \csname cft#1posthook\endcsname}
+  \newcommand\cfttocprehook{}
+  \newcommand\cftlofprehook{}
+  \newcommand\cftlotprehook{}
+  \newcommand\cfttocposthook{}
+  \newcommand\cftlofposthook{}
+  \newcommand\cftlotposthook{}
+\else
+  \PackageWarning{tocloft}{\string\@starttoc\space has already been redefined; tocloft bailing out.}
+\fi
 \endinput
 %%
 %% End of file `tocloft.sty'.
